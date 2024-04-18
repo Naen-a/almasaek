@@ -1,5 +1,4 @@
 import firebase_app from "@/db/firebaseConfig";
-
 import Cryptr from "cryptr";
 import {
   collection,
@@ -8,6 +7,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
+import jwt from "jsonwebtoken";
 
 const firestore = getFirestore(firebase_app);
 
@@ -30,7 +30,8 @@ export async function getLogin(login, password) {
     const decryptedPass = cryptr.decrypt(data[0].password);
 
     if (decryptedPass === password) {
-      return { status: 200, login: data[0].login };
+      const token = jwt.sign(data[0], process.env.NEXT_PUBLIC_HASH_KEY);
+      return { status: 200, user: data[0], token };
     }
   }
 

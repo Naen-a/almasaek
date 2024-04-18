@@ -26,7 +26,10 @@ export default function () {
       toast.dismiss(loading);
       toast.success("Вы успешно вошли");
 
-      Cookies.set("login", user?.login);
+      Cookies.set(
+        "user",
+        JSON.stringify({ user: user?.user, token: user?.token }),
+      );
 
       setTimeout(() => {
         toast.success("Перенаправляю");
@@ -43,8 +46,6 @@ export default function () {
       toast.dismiss(loading);
       toast.error("Неправильный логин или пароль");
     }
-
-    console.log(user);
   };
 
   return (

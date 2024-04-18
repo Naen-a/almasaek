@@ -30,8 +30,6 @@ export default function Home() {
         <Image alt="Hero image" src="/heroImage.png" width="800" height="800" />
       </div>
 
-      <div className="mx-auto container">Sdes bydet slaider</div>
-
       <div className="mx-auto container flex items-center py-16 space-y-12 flex-col font-semibold text-cobalt">
         <span className="text-2xl">Наши сервисы</span>
 

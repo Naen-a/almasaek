@@ -97,7 +97,7 @@ export default function Page({ params }) {
           <Image
             alt="section-image-1"
             src={textObject[params.details].src}
-            layout="fill"
+            fill
             className="rounded-2xl object-cover"
           />
         </div>

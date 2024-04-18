@@ -12,11 +12,12 @@ import {
 
 const firestore = getFirestore(firebase_app);
 
-export async function getCheckUser(inn, login, password) {
+export async function getCheckUser(iin, login, password) {
   const q = await query(
     collection(firestore, "users"),
-    where("inn", "==", inn || ""),
+    where("iin", "==", iin || ""),
     where("isLogged", "==", false),
+    where("role", "==", "student"),
   );
 
   const snap = await getDocs(q);
