@@ -11,10 +11,17 @@ export default function Header() {
   const router = useRouter();
   const [menu, setMenu] = useState(true);
 
+  console.log(window.location.href, " this is link");
+
   useEffect(() => {
     if (Cookies.get("user")) {
       setUserState(JSON.parse(Cookies.get("user")));
     } else {
+      // Логика перенарпавления
+      if (window.location.href.includes("http://localhost:3000/details")) {
+        return;
+      }
+
       router.push("/");
     }
   }, []);
