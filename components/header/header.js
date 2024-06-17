@@ -2,7 +2,6 @@
 import { getChat } from "@/app/api/chat/getChat";
 import { getSaveChat } from "@/app/api/chat/getSaveChat";
 import { getSearchUser } from "@/app/api/searchUser/getSearchUser";
-import { doc, onSnapshot } from "firebase/firestore";
 import Cookies from "js-cookie";
 import Image from "next/image";
 import Link from "next/link";
@@ -91,7 +90,6 @@ export default function Header() {
   };
 
   const openChat = () => {
-    console.log("chat opening");
     setOpenChatState(true);
   };
 
@@ -138,8 +136,6 @@ export default function Header() {
       console.log("updated");
     });
   };
-
-  console.log(currentChat, userState, "currs");
 
   return (
     <div className="border-b border-gray-500 py-5">
@@ -283,18 +279,6 @@ export default function Header() {
                 className="py-1 text-left hover:underline underline-offset-4"
               >
                 <span>Профиль</span>
-              </button>
-
-              <button className="py-1 text-left hover:underline underline-offset-4">
-                <span>Книжка успеваемости</span>
-              </button>
-
-              <button className="py-1 text-left hover:underline underline-offset-4">
-                <span>Оценки</span>
-              </button>
-
-              <button className="py-1 text-left hover:underline underline-offset-4">
-                <span>Уведомление</span>
               </button>
 
               <button
