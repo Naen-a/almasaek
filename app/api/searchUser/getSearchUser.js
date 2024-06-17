@@ -9,14 +9,11 @@ import {
 
 const firestore = getFirestore(firebase_app);
 
-export async function getUser(iin) {
+export async function getSearchUser(email) {
   const q = await query(
     collection(firestore, "users"),
-    where("iin", "==", iin || ""),
-    where("isLogged", "==", true),
+    where("email", "==", email || ""),
   );
-
-  // dodelat sdes bez parolya :)
 
   const snap = await getDocs(q);
 
@@ -25,5 +22,6 @@ export async function getUser(iin) {
     ...doc.data(),
   }));
 
+  console.log(data, "data");
   return data;
 }

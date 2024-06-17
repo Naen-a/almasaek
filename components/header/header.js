@@ -1,4 +1,8 @@
 "use client";
+import { getChat } from "@/app/api/chat/getChat";
+import { getSaveChat } from "@/app/api/chat/getSaveChat";
+import { getSearchUser } from "@/app/api/searchUser/getSearchUser";
+import { doc, onSnapshot } from "firebase/firestore";
 import Cookies from "js-cookie";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,8 +12,31 @@ import toast, { Toaster } from "react-hot-toast";
 
 export default function Header() {
   const [userState, setUserState] = useState("");
+  const [chatSearchUsers, setChatSearchUsers] = useState([]);
+  const [openChatState, setOpenChatState] = useState(false);
+  const [currentChat, setCurrentChat] = useState([]);
+  const [currentMessage, setCurrentMessage] = useState("");
+  const [currentChatActive, setCurrentChatActive] = useState(false);
+  const [activeChats, setActiveChats] = useState([]);
   const router = useRouter();
   const [menu, setMenu] = useState(true);
+
+  useEffect(() => {
+    if (!currentChatActive) return;
+    const ids = userState?.user?.id + chatSearchUsers[0].id;
+    const idsReversed = chatSearchUsers[0].id + userState?.user?.id;
+    const interval = setInterval(() => {
+      getChat(ids, idsReversed, userState?.user, chatSearchUsers[0].id).then(
+        (res) => {
+          if (res.length > 0) {
+            setCurrentChat(res);
+          }
+        },
+      );
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [currentChatActive]);
 
   useEffect(() => {
     if (Cookies.get("user")) {
@@ -57,15 +84,165 @@ export default function Header() {
     }, 2000);
   };
 
+  const closeChat = () => {
+    setOpenChatState(false);
+    setCurrentChat(false);
+    setCurrentChatActive(false);
+  };
+
+  const openChat = () => {
+    console.log("chat opening");
+    setOpenChatState(true);
+  };
+
+  const chatUserSearch = (text) => {
+    getSearchUser(text).then((res) => {
+      if (res) {
+        setChatSearchUsers(res);
+      }
+    });
+  };
+
+  const openDirectChat = () => {
+    setCurrentChatActive(true);
+
+    const ids = userState?.user?.id + chatSearchUsers[0].id;
+    const idsReversed = chatSearchUsers[0].id + userState?.user?.id;
+
+    getChat(ids, idsReversed, userState?.user, chatSearchUsers[0].id).then(
+      (res) => {
+        if (res.length > 0) {
+          setCurrentChat(res);
+        }
+      },
+    );
+  };
+
+  const sendMessage = () => {
+    const message = {
+      id: userState?.user?.id,
+      message: currentMessage,
+    };
+
+    const curr = currentChat;
+
+    curr[0]?.history.push(message);
+
+    setCurrentChat(curr);
+    setCurrentMessage("");
+
+    const ids = userState?.user?.id + chatSearchUsers[0].id;
+    const idsReversed = chatSearchUsers[0].id + userState?.user?.id;
+
+    getSaveChat(ids, idsReversed, currentChat[0]?.history).then((res) => {
+      console.log("updated");
+    });
+  };
+
+  console.log(currentChat, userState, "currs");
+
   return (
     <div className="border-b border-gray-500 py-5">
       <Toaster />
+
+      {/* Chat */}
+      {openChatState && (
+        <div className="chatWrapper flex items-center justify-center bg-black/40 z-30 w-screen h-screen fixed top-0 left-0">
+          <div className="w-[1000px] relative px-10 min-h-96 bg-white space-y-12">
+            <div
+              className="absolute top-10 right-10 font-semibold cursor-pointer text-xl"
+              onClick={closeChat}
+            >
+              X
+            </div>
+
+            {currentChat.length > 0 ? (
+              <div className="flex flex-col">
+                <span className="text-center block font-semibold">
+                  {currentChat[0]?.to[0]?.firstName}{" "}
+                  {currentChat[0]?.to[0]?.secondName}
+                </span>
+
+                <div className="max-h-[500px] p-5 h-[250px] flex space-y-2 flex-col overflow-y-scroll">
+                  {currentChat.length > 0 &&
+                    currentChat[0]?.history.map((item, index) => {
+                      return (
+                        <div
+                          key={index}
+                          className={` p-2 ${item?.id === userState?.user?.id ? "ml-auto bg-cobalt text-white rounded-full" : "bg-shuttlegray text-white rounded-full mr-auto"}`}
+                        >
+                          {item?.message}
+                        </div>
+                      );
+                    })}
+                </div>
+
+                <div className="flex p-5">
+                  <input
+                    type="text"
+                    value={currentMessage}
+                    onChange={(e) => setCurrentMessage(e.target.value)}
+                    className="w-full"
+                    placeholder="Введите сообщение"
+                  />
+                  <button
+                    onClick={sendMessage}
+                    className="bg-cobalt p-2 text-white"
+                  >
+                    Отправить
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <span className="block font-semibold text-xl">Поиск:</span>
+                  <input
+                    type="text"
+                    className="border-b w-full"
+                    placeholder="Введите email и нажмите enter"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && e.target.value) {
+                        chatUserSearch(e.target.value);
+                      }
+                    }}
+                  />
+
+                  {chatSearchUsers.length > 0 && (
+                    <span
+                      onClick={openDirectChat}
+                      className="font-semibold underline cursor-pointer block"
+                    >
+                      {chatSearchUsers[0]?.firstName}{" "}
+                      {chatSearchUsers[0].secondName}
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <span className="block font-semibold text-xl">Чаты:</span>
+
+                  <div></div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+      {/* Chat */}
 
       <div className="container mx-auto justify-between flex items-center">
         <Image src="/logo.png" width={80} height={80} alt="Logo" />
 
         {userState?.user?.role === "student" && (
           <div className="flex items-center space-x-6 relative">
+            <button
+              onClick={openChat}
+              className="  px-4 py-1.5 rounded-md transition-all  flex items-center space-x-3"
+            >
+              <span className="font-semibold">Чаты</span>
+            </button>
+
             <button
               onClick={openMenu}
               className="text-white bg-cobalt px-4 py-1.5 rounded-md transition-all hover:bg-shipcove flex items-center space-x-3"
@@ -178,6 +355,13 @@ export default function Header() {
 
         {userState?.user?.role === "teacher" && (
           <div className="flex items-center space-x-6">
+            <button
+              onClick={openChat}
+              className="  px-4 py-1.5 rounded-md transition-all  flex items-center space-x-3"
+            >
+              <span className="font-semibold">Чаты</span>
+            </button>
+
             <button
               onClick={teacherMenu}
               className="text-white bg-cobalt px-7 py-1.5 rounded-md transition-all hover:bg-shipcove flex items-center space-x-3"
